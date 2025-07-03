@@ -7,7 +7,7 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Initialize expense tracker in memory
+# Initialize expense tracker in memory TODO: add SQL later
 tracker = ExpenseTracker()
 
 
@@ -43,11 +43,13 @@ def add_expense():
         tracker.add_expense(
             category=data["category"], amount=float(data["amount"]), date=data["date"]
         )
-        
+
         # Save to file immediately after adding
         try:
             tracker.save_to_file("expenses.json")
-            print(f"Expense added and saved to file: {data['category']} - ${data['amount']}")
+            print(
+                f"Expense added and saved to file: {data['category']} - ${data['amount']}"
+            )
         except Exception as e:
             print(f"Error saving expense to file: {e}")
             # Continue anyway as the expense is still in memory
@@ -94,7 +96,9 @@ def delete_expense(expense_id):
                 # Save to file immediately after deleting
                 try:
                     tracker.save_to_file("expenses.json")
-                    print(f"Expense deleted and saved to file: {deleted_expense.category} - ${deleted_expense.amount}")
+                    print(
+                        f"Expense deleted and saved to file: {deleted_expense.category} - ${deleted_expense.amount}"
+                    )
                 except Exception as e:
                     print(f"Error saving after deletion to file: {e}")
                     # Continue anyway as the expense is still removed from memory
