@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "category": "Shopping",
+    "amount": 5.0,
+    "date": "2025-07-03",
+    "description": null
+  },
+  {
+    "category": "Shopping",
+    "amount": 20.0,
+    "date": "2025-07-03",
+    "description": null
+  },
+  {
+    "category": "Education",
+    "amount": 34.0,
+    "date": "2025-06-29",
+    "description": null
+  },
+  {
+    "category": "Entertainment",
+    "amount": 32.0,
+    "date": "2025-06-24",
+    "description": "movies"
+  }
+]
