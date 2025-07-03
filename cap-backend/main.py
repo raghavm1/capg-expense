@@ -1,8 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from expenses import ExpenseTracker
+from expenses import ExpenseTracker, ExpenseValidationError, CategoryError
 import json
 from datetime import datetime
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -18,11 +23,11 @@ def get_expenses():
     for expense in tracker.list_expenses():
         expenses.append(
             {
-                "id": f"{expense.date.isoformat()}_{expense.category}_{expense.amount}",
-                "category": expense.category,
+                "id": f"{expense.date.isoformat()}_{expense.category.name}_{expense.amount}",
+                "category": expense.category.name,
                 "amount": expense.amount,
                 "date": expense.date.isoformat(),
-                "description": "",  # Add empty description for frontend compatibility
+                "description": expense.description or "",
             }
         )
     return jsonify(expenses)
@@ -40,8 +45,11 @@ def add_expense():
         )
 
     try:
-        tracker.add_expense(
-            category=data["category"], amount=float(data["amount"]), date=data["date"]
+        expense = tracker.add_expense(
+            category=data["category"],
+            amount=float(data["amount"]),
+            date_str=data["date"],
+            description=data.get("description"),
         )
 
         # Save to file immediately after adding
@@ -52,22 +60,20 @@ def add_expense():
             )
         except Exception as e:
             print(f"Error saving expense to file: {e}")
-            # Continue anyway as the expense is still in memory
 
-        # Return the created expense
         return (
             jsonify(
                 {
-                    "id": f"{data['date']}_{data['category']}_{data['amount']}",
-                    "category": data["category"],
-                    "amount": float(data["amount"]),
-                    "date": data["date"],
-                    "description": data.get("description", ""),
+                    "id": f"{expense.date.isoformat()}_{expense.category.name}_{expense.amount}",
+                    "category": expense.category.name,
+                    "amount": expense.amount,
+                    "date": expense.date.isoformat(),
+                    "description": expense.description or "",
                 }
             ),
             201,
         )
-    except ValueError as e:
+    except (ValueError, Exception) as e:
         return jsonify({"error": str(e)}), 400
 
 
@@ -86,23 +92,22 @@ def delete_expense(expense_id):
         amount = float(parts[-1])
 
         # Find and remove the expense
-        for i, expense in enumerate(tracker.expenses):
+        for expense in tracker.expenses:
             if (
                 expense.date.isoformat() == date_str
-                and expense.category == category
+                and expense.category.name == category
                 and expense.amount == amount
             ):
-                deleted_expense = tracker.expenses.pop(i)
-                # Save to file immediately after deleting
-                try:
-                    tracker.save_to_file("expenses.json")
-                    print(
-                        f"Expense deleted and saved to file: {deleted_expense.category} - ${deleted_expense.amount}"
-                    )
-                except Exception as e:
-                    print(f"Error saving after deletion to file: {e}")
-                    # Continue anyway as the expense is still removed from memory
-                return jsonify({"message": "Expense deleted successfully"}), 200
+                if tracker.remove_expense(expense):
+                    # Save to file immediately after deleting
+                    try:
+                        tracker.save_to_file("expenses.json")
+                        print(
+                            f"Expense deleted and saved to file: {expense.category.name} - ${expense.amount}"
+                        )
+                    except Exception as e:
+                        print(f"Error saving after deletion to file: {e}")
+                    return jsonify({"message": "Expense deleted successfully"}), 200
 
         return jsonify({"error": "Expense not found"}), 404
     except (ValueError, IndexError) as e:
@@ -132,17 +137,16 @@ def get_statistics():
 def get_expenses_by_category(category):
     """Get expenses for a specific category"""
     expenses = []
-    for expense in tracker.list_expenses():
-        if expense.category.lower() == category.lower():
-            expenses.append(
-                {
-                    "id": f"{expense.date.isoformat()}_{expense.category}_{expense.amount}",
-                    "category": expense.category,
-                    "amount": expense.amount,
-                    "date": expense.date.isoformat(),
-                    "description": "",
-                }
-            )
+    for expense in tracker.get_expenses_by_category(category):
+        expenses.append(
+            {
+                "id": f"{expense.date.isoformat()}_{expense.category.name}_{expense.amount}",
+                "category": expense.category.name,
+                "amount": expense.amount,
+                "date": expense.date.isoformat(),
+                "description": expense.description or "",
+            }
+        )
     return jsonify(expenses)
 
 

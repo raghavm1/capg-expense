@@ -22,5 +22,17 @@
     "amount": 32.0,
     "date": "2025-06-24",
     "description": "movies"
+  },
+  {
+    "category": "Shopping",
+    "amount": 2.0,
+    "date": "2025-07-03",
+    "description": null
+  },
+  {
+    "category": "Travel",
+    "amount": 5.0,
+    "date": "2025-07-03",
+    "description": null
   }
 ]
