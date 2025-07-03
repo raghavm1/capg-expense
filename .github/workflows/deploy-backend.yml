@@ -3,7 +3,7 @@ name: Deploy Flask Backend to Cloud Run
 on:
   push:
     paths:
-      - "backend/**"
+      - "cap-backend/**"
       - ".github/workflows/deploy-backend.yml"
     branches:
       - main
