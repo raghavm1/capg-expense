@@ -81,7 +81,7 @@ class ExpenseTracker:
 
     def get_highest_and_lowest_category(self) -> Tuple[str, str]:
         category_totals = self.get_total_by_category()
-        # load this data from storage, so that don't need to comptue again and again
+        # load this data from storage, so that don't need to compute repeatedly
         if not category_totals:
             return (None, None)
         highest = max(category_totals.items(), key=lambda x: x[1])[0]
